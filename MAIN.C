@@ -16,11 +16,11 @@ typedef struct{
 int color_bola = 8, radio_bola = 7;
 int color_del_fondo = 15;
 
-/* Movimiento inicial de la bola */
+/* Variables que determinan la direccion de la bola */
 int cambioX = 2, cambioY = 1;
 
-/* Coordenadas iniciales de la bola */
-int bolax = 200, bolay = 300;
+/* Variables de coordenadas de la bola */
+int bolax, bolay;
 
 /* Coordenadas iniciales de las paletas */
 Paletas paleta1 = {10, 220, 20, 310, 9};
@@ -29,6 +29,7 @@ Paletas paleta2 = {620, 220, 630, 310, 9};
 /* Prototipos de funciones generales */
 void inicializar_graficos(void);
 void fondo(int color);
+void fotograma_Inicial(void);
 
 /*  Prototipos de funciones del juego */
 void dibujar_paleta1(void);
@@ -39,20 +40,21 @@ void borrar_paleta1(void);
 void borrar_paleta2(void);
 void borrar_bola(void);
 
+void pantalla_Derrota(void);
+
 void main(){
 	/* Inicio del modo grafico */
 	inicializar_graficos();
 
-	/* Fondo */
-	fondo(color_del_fondo);
+	/* Fotograma donde comienza el juego */
+	fotograma_Inicial();
 
-	/* Dibuja las paletas */
-	dibujar_paleta1(); dibujar_paleta2();
-
-	/* Bucle del juego */
+	/* Bucle del juego. Es un bucle que funciona tanto como escuchador de
+	eventos asi como accionador de eventos pasivos */
 	while(1){
-		/* Si la bola no ha tocado los limites se sigue moviendo */
-		if(bolax <= 640 && bolax >= 0){
+		/* PARTE PASIVA (se ejecuta aunque no se toque nada) */
+		/* Se verifica que la bola no este tocando los limites para moverla */
+		if(bolax < 640 && bolax >= 0){
 			borrar_bola();
 
 			/* Cambio de direccion si la bola toca los bordes superior o inferior */
@@ -74,15 +76,12 @@ void main(){
 			bolay += cambioY;
 
 			dibujar_bola();
-		} else {
+		} else{
 			/* La bola toco los limites y se termina el juego */
-			setcolor(2);
-			settextstyle(1, 0, 5);
-			outtextxy(155, 220, "JUEGO TERMINADO");
-			delay(2500);
-			break;
+			pantalla_Derrota();
 		}
 
+		/* PARTE ESCUCHADORA DE EVENTOS */
 		if(kbhit()){
 			int c = getch();
 			int cambio; /* Para sumar o restar a las coordenadas Y */
@@ -141,6 +140,22 @@ void fondo(int color){
 	bar(0, 0, 640, 480);
 }
 
+void fotograma_Inicial(void){
+	/* Coordenadas iniciales */
+	bolax = 200;
+	bolay = 300;
+
+	/* Direccion de la bola */
+	cambioX = 2, cambioY = 1;
+
+	/* Dibujo de los elementos */
+	/* Fondo */
+	fondo(color_del_fondo);
+
+	/* Dibuja las paletas */
+	dibujar_paleta1(); dibujar_paleta2();
+}
+
 void dibujar_paleta1(void){
 	setfillstyle(1, paleta1.color);
 	bar(paleta1.x1, paleta1.y1, paleta1.x2, paleta1.y2);
@@ -170,4 +185,35 @@ void borrar_bola(void){
 	setcolor(15);
 	setfillstyle(1, 15);
 	fillellipse(bolax, bolay, radio_bola, radio_bola);
+}
+
+void pantalla_Derrota(void){
+	/* Rectangulo de la pantalla */
+	setcolor(1);
+	setfillstyle(1, 1);
+	bar(145, 150, 530, 280);
+
+	/* Contorno del rectangulo */
+	setcolor(9);
+	setlinestyle(0, 0, 3);
+	rectangle(145, 150, 530, 280);
+
+	/* Texto de derrota */
+	setcolor(7);
+	settextstyle(1, 0, 5);
+	outtextxy(155, 160, "JUEGO TERMINADO");
+
+	/* Texto instructivo */
+	settextstyle(1, 0, 2);
+	outtextxy(180, 230, "Presiona 'espacio' para reiniciar");
+
+	while(1){
+		if(kbhit()){
+			int c = getch();
+			if(c==32){ /* Tecla presionada: espacio */
+				fotograma_Inicial();
+				break;
+			}
+		}
+	}
 }
